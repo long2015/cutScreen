@@ -36,7 +36,7 @@ void RCutScreen::setEnd(QPoint pos)
 	// 此时调用cmpPoint，设置区域的左上角、右下角
     leftUpPos = startPos;
     rightDownPos = endPos;
-    cmpPoint(leftUpPos,rightDownPos); 
+    cmpPoint(leftUpPos,rightDownPos);
 }
 void RCutScreen::setStart(QPoint pos)
 {

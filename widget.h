@@ -9,6 +9,8 @@
 #include<QLabel>
 #include<QPixmap>
 #include<QLineEdit>
+#include<QAction>
+#include<QMenu>
 #include"cutScreen.h"
 #include"inputdialog.h"
 
@@ -25,6 +27,7 @@ public:
     ~Widget();
 
 protected:
+    void contextMenuEvent(QContextMenuEvent *);
     void mousePressEvent(QMouseEvent *);
     void mouseMoveEvent(QMouseEvent *);
     void mouseReleaseEvent(QMouseEvent *);
@@ -32,19 +35,23 @@ protected:
     void mouseDoubleClickEvent(QMouseEvent *);
     void paintEvent(QPaintEvent *);
 
-private:
+private slots:
     void saveScreen();  
     void saveFullScreen();
 
 private:
-    Ui::Widget *ui;
+    Ui::Widget  *ui;
+    QMenu       *m_menu;        //右键菜单
+    QAction     *m_saveAction;
+    QAction     *m_saveFullAction;
+    QAction     *m_quitAction;
 
-    RCutScreen *cutScreen;      // RCutScreen对象,记录x y w h 数据
+    RCutScreen  *cutScreen;     // RCutScreen对象,记录x y w h 数据
     InputDialog *input;         // 设置 width height
-        QPixmap *infoPix;       // 截图信息显示背景
-    QPixmap *fullScreen;        // 保存全屏图像
-    QPixmap *bgScreen;          // 模糊背景图
-    QPoint movPos;              // 移动位置
+    QPixmap     *infoPix;       // 截图信息显示背景
+    QPixmap     *fullScreen;    // 保存全屏图像
+    QPixmap     *bgScreen;      // 模糊背景图
+    QPoint      movPos;         // 移动位置
 };
 
 #endif // WIDGET_H
