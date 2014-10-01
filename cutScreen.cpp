@@ -5,13 +5,18 @@ RCutScreen::RCutScreen(QSize size)
     maxWidth = size.width();
     maxHeight = size.height();
 
-	//初始化
+
+}
+void RCutScreen::clearArea()
+{
+    //初始化
     startPos = QPoint(-1,-1);
     endPos = startPos;
     leftUpPos = startPos;
     rightDownPos = startPos;
     status = SELECT;
 }
+
 int RCutScreen::width()
 {
     return maxWidth;

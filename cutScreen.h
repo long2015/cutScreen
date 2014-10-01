@@ -12,12 +12,12 @@ public:
     RCutScreen() {}
     RCutScreen(QSize size);
 
-	
+public:
+    void clearArea();
     void setStart(QPoint pos);
     void setEnd(QPoint pos);
     QPoint getStart();
     QPoint getEnd();
-    
 	
 	QPoint getLeftUp();
     QPoint getRightDown();

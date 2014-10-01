@@ -10,11 +10,22 @@ INCLUDEPATH += .
 # Input
 HEADERS += widget.h \
     cutScreen.h \
-    inputdialog.h
+    inputdialog.h \
+    qxtglobalshortcut/qxtglobalshortcut_p.h \
+    qxtglobalshortcut/qxtglobalshortcut.h \
+    qxtglobalshortcut/qxtglobal.h
 FORMS += widget.ui
 SOURCES += main.cpp widget.cpp \
     cutScreen.cpp \
-    inputdialog.cpp
+    inputdialog.cpp \
+    qxtglobalshortcut/qxtglobalshortcut.cpp
+
+win32{
+    SOURCES += qxtglobalshortcut/qxtglobalshortcut_win.cpp
+    LIBS += -luser32
+}
+unix:SOURCES += qxtglobalshortcut/qxtglobalshortcut_x11.cpp
+mac:SOURCES += qxtglobalshortcut/qxtglobalshortcut_mac.cpp
 
 RESOURCES += \
     pic.qrc

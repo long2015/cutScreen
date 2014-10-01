@@ -13,6 +13,7 @@
 #include<QMenu>
 #include"cutScreen.h"
 #include"inputdialog.h"
+#include"qxtglobalshortcut/qxtglobalshortcut.h"
 
 namespace Ui {
     class Widget;
@@ -35,16 +36,23 @@ protected:
     void mouseDoubleClickEvent(QMouseEvent *);
     void paintEvent(QPaintEvent *);
 
+    void grabFullScreen();
+
 private slots:
     void saveScreen();  
     void saveFullScreen();
+    void startCutScreen();
 
 private:
     Ui::Widget  *ui;
     QMenu       *m_menu;        //右键菜单
     QAction     *m_saveAction;
     QAction     *m_saveFullAction;
+    QAction     *m_cancelAction;
     QAction     *m_quitAction;
+
+    QSystemTrayIcon     *m_systemTray;
+    QxtGlobalShortcut   *m_shortcut;
 
     RCutScreen  *cutScreen;     // RCutScreen对象,记录x y w h 数据
     InputDialog *input;         // 设置 width height
