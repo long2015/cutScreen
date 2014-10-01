@@ -9,25 +9,32 @@
 #include<QTime>
 
 Widget::Widget(QWidget *parent) :
-        QWidget(parent), //
-        ui(new Ui::Widget) //
+    QWidget(parent), ui(new Ui::Widget), box(this)
 {
     ui->setupUi(this);
     input = new InputDialog(this);
-    this->setWindowIcon(QIcon(":/x.ico"));
     //No window title
+    this->setWindowIcon(QIcon(":/x.ico"));
     this->setWindowFlags(Qt::FramelessWindowHint);
     // 右键菜单
-    m_saveAction = new QAction(tr("Save"),this);
-    m_saveFullAction = new QAction(tr("Save Full Screen"),this);
-    m_cancelAction = new QAction(tr("Cancel"),this);
-    m_quitAction = new QAction(tr("Quit"),this);
+    m_clearAction = new QAction(tr("清除区域"),this);
+    m_saveAction = new QAction(tr("保存"),this);
+    m_saveFullAction = new QAction(tr("截取全屏"),this);
+    m_cancelAction = new QAction(tr("截屏"),this);
+    m_aboutAction = new QAction(tr("关于..."),this);
+    m_quitAction = new QAction(tr("退出"),this);
     m_menu = new QMenu(this);
+    m_menu->addAction(m_clearAction);
+    m_menu->addSeparator();
     m_menu->addAction(m_saveAction);
     m_menu->addAction(m_saveFullAction);
+    m_menu->addSeparator();
     m_menu->addAction(m_cancelAction);
     m_menu->addSeparator();
     m_menu->addAction(m_quitAction);
+    //最小化时不现实这个三个菜单
+    m_clearAction->setVisible(false);
+    m_saveAction->setVisible(false);
 
     //系统托盘
     m_systemTray = new QSystemTrayIcon(this);
@@ -36,14 +43,11 @@ Widget::Widget(QWidget *parent) :
     m_systemTray->setContextMenu(m_menu);
     m_systemTray->show();
 
-    m_shortcut = new QxtGlobalShortcut(QKeySequence("Ctrl+Alt+a"), this);
-    connect(m_shortcut, SIGNAL(activated()),this,SLOT(startCutScreen()));
-
     //取得屏幕大小，初始化 cutScreen
     cutScreen = new RCutScreen(QApplication::desktop()->size());
     resize(cutScreen->width(),cutScreen->height());
 
-    //截图信息显示区域 背景
+    //截图信息显示区域背景
     infoPix = new QPixmap(200,32);
     QPainter infoP(infoPix);
     infoP.setBrush(QBrush(QColor(Qt::black),Qt::SolidPattern));
@@ -53,11 +57,18 @@ Widget::Widget(QWidget *parent) :
     bgScreen = new QPixmap();
     grabFullScreen();
 
-
+    connect(m_clearAction,SIGNAL(triggered()),this,SLOT(clearScreen()));
     connect(m_saveAction,SIGNAL(triggered()),this,SLOT(saveScreen()));
     connect(m_saveFullAction,SIGNAL(triggered()),this,SLOT(saveFullScreen()));
-    connect(m_cancelAction,SIGNAL(triggered()),this,SLOT(hide()));
+    connect(m_cancelAction,SIGNAL(triggered()),this,SLOT(startCutScreen()));
     connect(m_quitAction,SIGNAL(triggered()),qApp,SLOT(quit()));
+    //点击托盘图标
+    connect(m_systemTray , SIGNAL(activated(QSystemTrayIcon::ActivationReason)),
+                     this, SLOT(activeSystemTray(QSystemTrayIcon::ActivationReason)));
+
+    //全局快捷键
+    m_shortcut = new QxtGlobalShortcut(QKeySequence("Ctrl+Alt+a"), this);
+    connect(m_shortcut, SIGNAL(activated()),this,SLOT(startCutScreen()));
 }
 
 Widget::~Widget()
@@ -119,19 +130,11 @@ void Widget::saveFullScreen()
 {
     fullScreen->save("fullScreen.jpg","JPG");
 }
-void Widget::startCutScreen()
+
+void Widget::clearScreen()
 {
-    if( this->isVisible() )
-    {
-        setVisible(false);
-    }
-    else
-    {
-        cutScreen->clearArea();
-        grabFullScreen();
-        setVisible(true);
-        this->activateWindow();
-    }
+    cutScreen->clearArea();
+    update();
 }
 
 /****************************************
@@ -152,16 +155,57 @@ void Widget::saveScreen()
                                     tr("JPEG Files (*.jpg);;JPEG (*.jpg)"),
                                     &selectedFilter,
                                     options);
-									
-    int x = cutScreen->getLeftUp().x();
-    int y = cutScreen->getLeftUp().y();
-    int w = cutScreen->getRightDown().x()-x;
-    int h = cutScreen->getRightDown().y()-y;
+    if( !fileName.isEmpty() )
+    {
+        int x = cutScreen->getLeftUp().x();
+        int y = cutScreen->getLeftUp().y();
+        int w = cutScreen->getRightDown().x()-x;
+        int h = cutScreen->getRightDown().y()-y;
 
-    fullScreen->copy(x,y,w,h).save(fileName,"JPG");
+        fullScreen->copy(x,y,w,h).save(fileName,"JPG");
 
-    //保存成功后退出
-    qApp->quit();
+        //保存成功后退出
+        qApp->quit();
+    }
+}
+void Widget::startCutScreen()
+{
+    if( this->isVisible() )
+    {
+        m_cancelAction->setText(tr("截屏"));
+        setVisible(false);
+    }
+    else
+    {
+        m_cancelAction->setText(tr("最小化"));
+        cutScreen->clearArea();
+        grabFullScreen();
+        setVisible(true);
+        this->activateWindow();
+    }
+
+    m_clearAction->setVisible(isVisible());
+    m_saveAction->setVisible(isVisible());
+}
+
+void Widget::about()
+{
+    box.setWindowTitle(tr("cutScreen v1.0"));
+    box.setText(tr("cutScreen v1.0 小截图工具\n快捷键 Ctrl + Alt + a"));
+    box.exec();
+    //???
+}
+void Widget::activeSystemTray(QSystemTrayIcon::ActivationReason reason)
+{
+    switch(reason)
+    {
+    //点击托盘显示窗口
+    case QSystemTrayIcon::Trigger:
+        startCutScreen();
+        break;
+    default:
+        break;
+    }
 }
 
 void Widget::contextMenuEvent(QContextMenuEvent *)

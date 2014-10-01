@@ -39,20 +39,26 @@ protected:
     void grabFullScreen();
 
 private slots:
-    void saveScreen();  
+    void clearScreen();
+    void saveScreen();
     void saveFullScreen();
     void startCutScreen();
+    void about();
+    void activeSystemTray(QSystemTrayIcon::ActivationReason reason);
 
 private:
     Ui::Widget  *ui;
     QMenu       *m_menu;        //右键菜单
+    QAction     *m_clearAction;
     QAction     *m_saveAction;
     QAction     *m_saveFullAction;
     QAction     *m_cancelAction;
+    QAction     *m_aboutAction;
     QAction     *m_quitAction;
 
     QSystemTrayIcon     *m_systemTray;
     QxtGlobalShortcut   *m_shortcut;
+    QMessageBox  box;
 
     RCutScreen  *cutScreen;     // RCutScreen对象,记录x y w h 数据
     InputDialog *input;         // 设置 width height
