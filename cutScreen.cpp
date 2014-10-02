@@ -4,8 +4,7 @@ RCutScreen::RCutScreen(QSize size)
 {
     maxWidth = size.width();
     maxHeight = size.height();
-
-
+    clearArea();
 }
 void RCutScreen::clearArea()
 {

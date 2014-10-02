@@ -41,6 +41,7 @@ protected:
 private slots:
     void clearScreen();
     void saveScreen();
+    void clipScreen();
     void saveFullScreen();
     void startCutScreen();
     void about();
@@ -51,6 +52,7 @@ private:
     QMenu       *m_menu;        //右键菜单
     QAction     *m_clearAction;
     QAction     *m_saveAction;
+    QAction     *m_finishAction;
     QAction     *m_saveFullAction;
     QAction     *m_cancelAction;
     QAction     *m_aboutAction;
@@ -66,6 +68,7 @@ private:
     QPixmap     *fullScreen;    // 保存全屏图像
     QPixmap     *bgScreen;      // 模糊背景图
     QPoint      movPos;         // 移动位置
+    QCursor     m_colorCursor;
 };
 
 #endif // WIDGET_H

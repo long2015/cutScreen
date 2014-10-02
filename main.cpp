@@ -8,7 +8,7 @@ int main(int argc, char *argv[])
     QTextCodec::setCodecForTr(QTextCodec::codecForName("UTF-8"));
 
     Widget w;
-    w.hide();
+    w.show();
 
     return a.exec();
 }

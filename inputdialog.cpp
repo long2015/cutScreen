@@ -69,17 +69,17 @@ void InputDialog::cancel()
 
 bool InputDialog::isOk()
 {
-        if( inputW->text()!="" && inputH->text()!="" )
-        {
-            return true;
-        }
-        // 为 -1 说明按了取消键
-        else if( width==-1 && height==-1 )
-        {
-            width=0;
-            height=0;
-
-            return false;
-        }
+    if( inputW->text()!="" && inputH->text()!="" )
+    {
+        return true;
+    }
+    // 为 -1 说明按了取消键
+    else if( width==-1 && height==-1 )
+    {
+        width=0;
+        height=0;
+        return false;
+    }
+    return false;
 }
 

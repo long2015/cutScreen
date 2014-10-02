@@ -16,25 +16,27 @@ Widget::Widget(QWidget *parent) :
     //No window title
     this->setWindowIcon(QIcon(":/x.ico"));
     this->setWindowFlags(Qt::FramelessWindowHint);
+    m_colorCursor = QCursor(QPixmap(":/103.ico"),0,0);
+    setCursor(m_colorCursor);
+
     // 右键菜单
-    m_clearAction = new QAction(tr("清除区域"),this);
+    m_clearAction = new QAction(tr("重新选择区域"),this);
     m_saveAction = new QAction(tr("保存"),this);
-    m_saveFullAction = new QAction(tr("截取全屏"),this);
-    m_cancelAction = new QAction(tr("截屏"),this);
+    m_finishAction = new QAction(tr("完成截图"),this);
+    m_saveFullAction = new QAction(tr("选择全屏"),this);
+    m_cancelAction = new QAction(tr("最小化"),this);
     m_aboutAction = new QAction(tr("关于..."),this);
     m_quitAction = new QAction(tr("退出"),this);
     m_menu = new QMenu(this);
     m_menu->addAction(m_clearAction);
     m_menu->addSeparator();
     m_menu->addAction(m_saveAction);
+    m_menu->addAction(m_finishAction);
     m_menu->addAction(m_saveFullAction);
     m_menu->addSeparator();
     m_menu->addAction(m_cancelAction);
     m_menu->addSeparator();
     m_menu->addAction(m_quitAction);
-    //最小化时不现实这个三个菜单
-    m_clearAction->setVisible(false);
-    m_saveAction->setVisible(false);
 
     //系统托盘
     m_systemTray = new QSystemTrayIcon(this);
@@ -46,6 +48,7 @@ Widget::Widget(QWidget *parent) :
     //取得屏幕大小，初始化 cutScreen
     cutScreen = new RCutScreen(QApplication::desktop()->size());
     resize(cutScreen->width(),cutScreen->height());
+//    resize(600,400);
 
     //截图信息显示区域背景
     infoPix = new QPixmap(200,32);
@@ -59,6 +62,7 @@ Widget::Widget(QWidget *parent) :
 
     connect(m_clearAction,SIGNAL(triggered()),this,SLOT(clearScreen()));
     connect(m_saveAction,SIGNAL(triggered()),this,SLOT(saveScreen()));
+    connect(m_finishAction,SIGNAL(triggered()),this,SLOT(clipScreen()));
     connect(m_saveFullAction,SIGNAL(triggered()),this,SLOT(saveFullScreen()));
     connect(m_cancelAction,SIGNAL(triggered()),this,SLOT(startCutScreen()));
     connect(m_quitAction,SIGNAL(triggered()),qApp,SLOT(quit()));
@@ -82,9 +86,10 @@ void Widget::paintEvent(QPaintEvent *)
     int y = cutScreen->getLeftUp().y();
     int w = cutScreen->getRightDown().x()-x;
     int h = cutScreen->getRightDown().y()-y;
+    qDebug("paintEvent %d-%d %d-%d\n",x,y,w,h);
 
     QPainter painter(this);
-    painter.setPen(QPen(Qt::green,1,Qt::SolidLine));
+    painter.setPen(QPen(Qt::green,2,Qt::SolidLine));
 	
     painter.drawPixmap(0,0,*bgScreen);  //画模糊背景
 
@@ -106,8 +111,8 @@ void Widget::paintEvent(QPaintEvent *)
         offsetY = 32;
     }
     painter.drawPixmap(x,y-32 + offsetY,*infoPix);
-    painter.drawText(x+2,y-20 + offsetY,QString("Cut Area: (%1 x %2)-(%3 x %4)").arg(x).arg(y).arg(x+w).arg(y+h));
-    painter.drawText(x+2,y-6 + offsetY,QString("          (%1 x %2)").arg(w).arg(h));
+    painter.drawText(x+2,y-20 + offsetY,QString("%5: (%1 x %2)-(%3 x %4)").arg(x).arg(y).arg(x+w).arg(y+h).arg(tr("区域坐标")));
+    painter.drawText(x+2,y-6 + offsetY,QString("%5: (%1 x %2)").arg(w).arg(h).arg(tr("区域大小")));
 }
 void Widget::grabFullScreen()
 {
@@ -120,6 +125,18 @@ void Widget::grabFullScreen()
     QPainter p(bgScreen);
     p.drawPixmap(0,0,pix);
 }
+void Widget::clipScreen()
+{
+    int x = cutScreen->getLeftUp().x();
+    int y = cutScreen->getLeftUp().y();
+    int w = cutScreen->getRightDown().x()-x;
+    int h = cutScreen->getRightDown().y()-y;
+
+    QClipboard *clipboard = QApplication::clipboard();
+    clipboard->setPixmap(fullScreen->copy(x,y,w,h));
+
+    qApp->quit();
+}
 
 /*****************************************
 *
@@ -128,7 +145,13 @@ void Widget::grabFullScreen()
 ****************************************/
 void Widget::saveFullScreen()
 {
-    fullScreen->save("fullScreen.jpg","JPG");
+    if( this->isVisible() == false )
+    {
+        startCutScreen();
+    }
+    cutScreen->setStart(QPoint(0,0));
+    cutScreen->setEnd(QPoint(this->width(),this->height()));
+    update();
 }
 
 void Widget::clearScreen()
@@ -172,8 +195,9 @@ void Widget::startCutScreen()
 {
     if( this->isVisible() )
     {
-        m_cancelAction->setText(tr("截屏"));
+        m_cancelAction->setText(tr("截屏 Ctrl+Alt+a"));
         setVisible(false);
+        this->setCursor(Qt::ArrowCursor);
     }
     else
     {
@@ -182,6 +206,7 @@ void Widget::startCutScreen()
         grabFullScreen();
         setVisible(true);
         this->activateWindow();
+        this->setCursor(m_colorCursor);
     }
 
     m_clearAction->setVisible(isVisible());
@@ -238,6 +263,7 @@ void Widget::mouseMoveEvent(QMouseEvent *e)
 
     if( cutScreen->getStatus()==SELECT ) // 选择区域
     {
+        qDebug("mouseMoveEvent SELECT");
         cutScreen->setEnd( e->pos() );
     }
     else if( cutScreen->getStatus()==MOV ) //移动所选区域
@@ -325,6 +351,6 @@ void Widget::mouseReleaseEvent(QMouseEvent *e)
     }
     else if( cutScreen->getStatus()==MOV )  // 鼠标成正常状态
     {
-        this->setCursor(Qt::ArrowCursor);
+        this->setCursor(m_colorCursor);
     }
 }
